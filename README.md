@@ -83,7 +83,7 @@ Requirements:
 - Python 3 on the host for input discovery when using the `docker` profile.
 - For FFPErase: Apptainer, Singularity, or Docker, plus access to the upstream workflow, container, and models.
 
-Install from the private GitHub repository:
+Install from the GitHub repository:
 
 ~~~bash
 git clone https://github.com/cfarkas/lowpass-variants-nextflow.git
