@@ -1,0 +1,248 @@
+lowpass-variants-nextflow: full help
+====================================
+
+PURPOSE
+  Run a unified low-pass SNV/indel workflow for either fresh or FFPE samples.
+  The common path prepares BAMs, performs BQSR by default, calls variants with
+  Mutect2/FreeBayes/BCFtools, merges per-sample evidence, and left-aligns caller
+  and final VCFs. FFPE mode then runs external FFPErase and annotates final VCFs.
+
+ENTRY POINT AND NEXTFLOW PARSER
+  ./bin/run_pipeline.sh [Nextflow options] [pipeline parameters]
+
+  The launcher probes syntax parser v2, then v1, and uses the first parser that
+  compiles this package. Set NXF_SYNTAX_PARSER=v1 or v2 to request one explicitly.
+  Calling nextflow run main.nf directly bypasses parser auto-detection.
+
+MODE: EXACTLY ONE IS REQUIRED
+  --fresh
+      Run the common workflow with no FFPE assessment. Fresh mode does not
+      calculate FFPE-specific thresholds or C>T/G>A risk, invoke FFPErase, or
+      emit FFPE-specific TSV columns or VCF INFO fields.
+
+  --ffpe
+      Run the common workflow, apply the FFPE C>T/G>A heuristic during final
+      VCF construction, run external FFPErase, and annotate the final VCFs.
+
+  Both flags together, or neither flag, are rejected.
+
+INPUT AND OUTPUT
+  --input PATH
+      BAM directory, one BAM, a supported manifest, or comma-separated BAMs.
+
+  --outdir PATH
+      Output directory.
+
+  --overwrite true|false
+      Replace already-published pipeline products and logs; default: false.
+      Nextflow metadata under <outdir>/nextflow_info is refreshed separately.
+
+  --ref FASTA
+      Reference used for BAM processing, callers, and bcftools norm. It is
+      copied into task work, where its .fai and .dict are generated.
+
+  --samples CSV
+      Optional comma-separated sample IDs.
+
+  --recursive
+      Search recursively below --input.
+
+  --database_tsv TSV, --metadata_tsv TSV
+      Optional sample metadata used during BAM resolution.
+
+  --cohort all|lymphoma|brain
+      Optional metadata-based cohort filter. lymphoma or brain requires
+      --database_tsv/--metadata_tsv; default: all.
+
+BQSR
+  BQSR is enabled by default in both modes.
+
+  --known_sites VCF1,VCF2
+      Comma-separated known-sites VCFs compatible with --ref. Each VCF must
+      have an adjacent index. Compressed VCFs accept .tbi, .csi, or .idx;
+      uncompressed VCFs require .idx. At least one is required by default.
+
+  --skip_bqsr
+      Deliberately bypass BaseRecalibrator/ApplyBQSR. Use only when justified
+      for the input data. Without this flag, missing --known_sites is an error.
+
+INPUT STAGING AND SAFETY
+  BAMs, the reference, known-sites, and optional Mutect2 resource VCFs are
+  staged into task work. Missing BAM indices and reference sidecars are made
+  there, so files beside user-supplied BAMs and the reference are not modified.
+  Resources staged into one step must have distinct basenames; collisions are
+  rejected.
+
+TARGET SCOPE
+  Genome-wide calling is the default.
+
+  --genes CSV                   Restrict to exon/promoter regions for genes.
+  --bed BED                     Restrict to a custom BED.
+  --target_bed BED              Alias for --bed.
+  --gtf GTF                     Optional GTF for --genes.
+  --gencode_version VERSION     Release used when a GTF must be obtained.
+  --promoter_upstream N
+  --promoter_downstream N
+
+BAM PREPARATION
+  --duplicate_mode skip|mark|remove
+  --force_rg_sm_basename true|false
+  --prepare_cpus N
+
+CALLERS AND RESOURCES
+  --germline_resource VCF
+  --panel_of_normals VCF
+  --pon VCF                     Alias for --panel_of_normals.
+  --skip_mutect2 true|false
+  --skip_freebayes true|false
+  --skip_bcftools true|false
+
+  Each supplied germline-resource or panel-of-normals VCF requires an adjacent
+  .tbi, .csi, or .idx and a basename that does not collide during staging.
+
+CALLING THRESHOLDS
+  --min_mapq N
+  --min_bq N
+  --min_dp N
+  --min_alt_reads N
+  --min_af FLOAT
+  --vote_threshold N
+  --auto_thresholds true|false
+
+  The FFPE-only C>T/G>A heuristic uses mode-specific effective values derived
+  from --ffpe_ct_vaf_keep and --ffpe_ct_min_alt. Fresh mode does not apply that
+  heuristic.
+
+CPU AND PARALLELISM
+  --threads N
+  --prepare_cpus N
+  --mutect2_cpus N
+  --freebayes_cpus N
+  --bcftools_cpus N
+  --normalize_cpus N
+  --finalize_cpus N
+  --max_samples_parallel N
+  --max_prepare_parallel N
+  --max_mutect2_parallel N
+  --max_freebayes_parallel N
+  --max_bcftools_parallel N
+  --max_normalize_parallel N
+  --max_finalize_parallel N
+
+FFPERASE CONTROLS (--ffpe ONLY)
+  --ffperase_threads N
+      Parallelism for preprocessing and pileup work.
+
+  --ffperase_classify_threads N
+      Parallelism for classification work.
+
+  --ffperase_sample_jobs N
+      Concurrent FFPErase sample/type jobs.
+
+  --ffperase_picard_jobs N
+      Concurrent Picard artifact-metrics jobs.
+
+  --ffperase_split_pileup N
+      Variants per FFPErase pileup split.
+
+  --ffperase_split_reads N
+      Reads per FFPErase split.
+
+  --ffperase_container PATH_OR_URI
+      Container file or immutable container URI when available.
+
+  --ffperase_engine auto|apptainer|singularity|docker
+      Container runtime.
+
+  --ffperase_repository REPO
+      Upstream nf-ffperase repository.
+
+  --ffperase_revision REVISION
+      Upstream revision. Pin this for reproducibility.
+
+  --ffperase_filter_artifacts true|false
+      Add FFPErase artifact FILTER tags to annotated records.
+
+  --ffperase_fail_on_error true|false
+      Fail the overall run when an FFPErase sample/type fails.
+
+VCF NORMALIZATION
+  Mutect2, FreeBayes, BCFtools, and merged final VCFs are processed with
+  bcftools norm -m -any -f <ref>. Both modes therefore emit left-aligned,
+  split multiallelic output. Normalization or indexing failure is fatal; the
+  workflow does not publish a copied unnormalized VCF as a successful result.
+  Every normalized compressed VCF requires a .tbi index; references or
+  coordinates outside TBI limits are currently unsupported.
+
+EXAMPLE 1: FRESH WITH BQSR
+  ./bin/run_pipeline.sh \
+    -profile conda \
+    -resume \
+    -work-dir /path/to/nextflow-work \
+    --fresh \
+    --input /path/to/bams \
+    --outdir /path/to/fresh-results \
+    --samples SAMPLE_01,SAMPLE_02 \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
+
+EXAMPLE 2: FFPE WITH BQSR AND FFPERASE
+  ./bin/run_pipeline.sh \
+    -profile conda \
+    -resume \
+    -work-dir /path/to/nextflow-work \
+    --ffpe \
+    --input /path/to/bams \
+    --outdir /path/to/ffpe-results \
+    --samples SAMPLE_01,SAMPLE_02 \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz \
+    --ffperase_threads 16 \
+    --ffperase_classify_threads 2 \
+    --ffperase_sample_jobs 1 \
+    --ffperase_picard_jobs 1 \
+    --ffperase_split_pileup 5000 \
+    --ffperase_split_reads 7500000 \
+    --ffperase_engine auto \
+    --ffperase_filter_artifacts true \
+    --ffperase_fail_on_error true
+
+EXAMPLE 3: EXPLICITLY SKIP BQSR
+  ./bin/run_pipeline.sh \
+    -profile conda \
+    --fresh \
+    --skip_bqsr \
+    --input /path/to/bams \
+    --outdir /path/to/no-bqsr-results \
+    --ref /path/to/reference.fa
+
+OUTPUTS: BOTH MODES
+  <outdir>/preprocessed_bam/<sample>.preprocessed.bam
+  <outdir>/preprocessed_bam/<sample>.preprocessed.bam.bai
+  <outdir>/final_vcf/<sample>.final_variants.vcf
+  <outdir>/final_vcf/<sample>.final_variants.vcf.gz
+  <outdir>/final_vcf/<sample>.final_variants.vcf.gz.tbi
+  <outdir>/reports/per_sample/<sample>.final_variants.retained.tsv
+  <outdir>/nextflow_info/{report,timeline,trace,dag}.*
+
+ADDITIONAL OUTPUTS: FFPE MODE
+  <outdir>/ffperase_classification/classified/
+  <outdir>/ffperase_classification/final_vcf/
+    <sample>.final_variants.ffperase_annotated.vcf.gz
+    <sample>.final_variants.ffperase_annotated.vcf.gz.tbi
+  <outdir>/ffperase_classification/reports/
+    all_samples.ffperase_annotation_summary.tsv
+  <outdir>/ffperase_status/
+  <outdir>/ffperase_picard_metrics_summary/
+  <outdir>/logs/ffperase.done.txt
+
+  Transient FFPErase work trees, caches, models, staged BAMs, and reference
+  copies remain in the Nextflow work directory for -resume and are not
+  published as results.
+
+PORTABILITY AND THIRD-PARTY TERMS
+  Replace all example paths with paths on the execution host. Do not assume a
+  particular storage mount, home, cache, or reference directory. FFPErase may
+  download an upstream workflow, container, and model unless already cached.
+
+  Third-party licenses and terms apply independently. See THIRD_PARTY.md.

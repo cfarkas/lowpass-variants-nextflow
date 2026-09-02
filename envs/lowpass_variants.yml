@@ -1,0 +1,18 @@
+name: lowpass_variants
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - gatk4
+  - samtools
+  - bcftools
+  - bedtools
+  - freebayes
+  - htslib
+  - wget
+  - coreutils
+  - gawk
+  - sed
+  - grep
+  - findutils

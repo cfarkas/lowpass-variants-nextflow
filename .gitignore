@@ -1,0 +1,36 @@
+# Nextflow runtime state and generated reports
+.nextflow/
+.nextflow.log*
+.nextflow-console.log
+work/
+work-*/
+work_*/
+*.trace.txt
+*.timeline.html
+*.report.html
+*.dag.html
+
+# Local environment and container caches
+.conda/
+.mamba/
+.apptainer/
+.singularity/
+
+# Python and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor and operating-system files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local secrets and ad-hoc overrides
+.env
+.env.*
+*.local.config
+secrets/

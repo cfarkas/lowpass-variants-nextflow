@@ -1,0 +1,87 @@
+lowpass-variants-nextflow
+=========================
+
+Unified low-pass per-sample SNV/indel workflow for fresh or FFPE material.
+
+ENTRY POINT
+  ./bin/run_pipeline.sh [Nextflow options] [pipeline parameters]
+
+  The launcher auto-detects Nextflow syntax parser v2 or v1. Direct
+  nextflow run main.nf usage bypasses that detection.
+
+REQUIRED MODE (choose exactly one)
+  --fresh                       Common calling + BQSR by default + left alignment.
+                                Performs no FFPE assessment: no FFPE-specific
+                                thresholds, heuristic, FFPErase run, TSV
+                                columns, or VCF INFO fields.
+  --ffpe                        Common workflow + FFPE heuristic + external
+                                FFPErase classification and VCF annotation.
+
+  Both flags together, or neither flag, are rejected.
+
+REQUIRED INPUTS
+  --input PATH                  BAM directory, BAM, manifest, or BAM list.
+  --outdir PATH                 Output directory.
+  --ref FASTA                   Reference FASTA; copied into task work.
+  --known_sites VCF1,VCF2      Comma-separated BQSR known-sites VCFs.
+                                Required unless --skip_bqsr is used.
+                                Compressed: adjacent .tbi/.csi/.idx;
+                                uncompressed: adjacent .idx.
+  --skip_bqsr                   Explicitly disable BQSR.
+
+INPUT STAGING AND SAFETY
+  BAMs, reference, known-sites, and optional Mutect2 resources are staged.
+  Reference sidecars and missing BAM indices are created in task work; source
+  directories are not modified. Resource basenames must be unique per set.
+  --germline_resource/--panel_of_normals require adjacent .tbi/.csi/.idx.
+
+OUTPUT CONTROL
+  --overwrite true|false        Replace published products; default: false.
+                                nextflow_info metadata is refreshed separately.
+
+SELECTION AND SCOPE
+  --samples CSV                 Comma-separated sample IDs.
+  --recursive                   Search recursively below --input.
+  --genes CSV                   Restrict to selected gene symbols.
+  --bed BED                     Restrict to a BED file.
+  --target_bed BED              Alias for --bed.
+
+FFPE-ONLY CONTROLS
+  --ffperase_threads N
+  --ffperase_classify_threads N
+  --ffperase_sample_jobs N
+  --ffperase_picard_jobs N
+  --ffperase_split_pileup N
+  --ffperase_split_reads N
+  --ffperase_container PATH_OR_URI
+  --ffperase_engine auto|apptainer|singularity|docker
+  --ffperase_repository REPO
+  --ffperase_revision REVISION
+  --ffperase_filter_artifacts true|false
+  --ffperase_fail_on_error true|false
+
+NORMALIZATION
+  Both modes left-align every caller VCF and final VCF with bcftools norm
+  against --ref. Normalization/indexing errors fail the workflow. Every
+  normalized compressed VCF requires a .tbi; TBI-incompatible data fail.
+
+MAIN OUTPUTS
+  <outdir>/final_vcf/<sample>.final_variants.vcf.gz
+  <outdir>/final_vcf/<sample>.final_variants.vcf.gz.tbi
+  <outdir>/reports/per_sample/<sample>.final_variants.retained.tsv
+
+FFPE OUTPUTS
+  <outdir>/ffperase_classification/classified/
+  <outdir>/ffperase_classification/final_vcf/
+    <sample>.final_variants.ffperase_annotated.vcf.gz
+    <sample>.final_variants.ffperase_annotated.vcf.gz.tbi
+  <outdir>/ffperase_classification/reports/
+  <outdir>/ffperase_status/
+  <outdir>/ffperase_picard_metrics_summary/
+  <outdir>/logs/ffperase.done.txt
+
+HELP
+  ./bin/run_pipeline.sh --help_full
+
+Third-party tools, containers, models, and data retain their upstream terms.
+See THIRD_PARTY.md.

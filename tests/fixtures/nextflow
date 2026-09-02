@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+: "${FAKE_NF_LOG:?FAKE_NF_LOG must identify the fake Nextflow call log}"
+
+{
+  printf '%s' "${NXF_SYNTAX_PARSER-<unset>}"
+  for argument in "$@"; do
+    printf '|%q' "$argument"
+  done
+  printf '\n'
+} >> "$FAKE_NF_LOG"
+
+if [[ "${1:-}" == "-version" ]]; then
+  printf 'nextflow version 99.1-test build 1\n'
+  exit 0
+fi
+
+[[ "${1:-}" == "run" ]] || exit 64
+
+is_help=false
+if [[ "${*: -1}" == "--help" ]]; then
+  is_help=true
+fi
+
+if [[ "$is_help" == true ]]; then
+  case "${FAKE_NF_MODE:-both}" in
+    both) [[ "${NXF_SYNTAX_PARSER:-}" == v1 || "${NXF_SYNTAX_PARSER:-}" == v2 ]] ;;
+    v2_only) [[ "${NXF_SYNTAX_PARSER:-}" == v2 ]] ;;
+    v1_only) [[ "${NXF_SYNTAX_PARSER:-}" == v1 ]] ;;
+    neither) false ;;
+    *) printf 'unknown FAKE_NF_MODE: %s\n' "$FAKE_NF_MODE" >&2; exit 65 ;;
+  esac
+fi
+
+exit "${FAKE_NF_FINAL_STATUS:-0}"
