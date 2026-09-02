@@ -19,7 +19,7 @@ run_test() {
 }
 
 run_test 'parser launcher unit tests' "${TEST_DIR}/test_run_pipeline.sh"
-run_test 'package static contract' python3 "${TEST_DIR}/test_package_contract.py"
+run_test 'package static rules' python3 "${TEST_DIR}/test_package_rules.py"
 run_test 'BAM/sample resolution' python3 "${TEST_DIR}/test_resolve_bams.py"
 run_test 'fresh versus FFPE unit behavior' python3 "${TEST_DIR}/test_sample_mode.py"
 run_test 'VCF left-alignment integration' "${TEST_DIR}/test_left_alignment.sh"

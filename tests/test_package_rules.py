@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static release contract for the integrated low-pass variants package."""
+"""Static release rules for the integrated low-pass variants package."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def without_comments(text: str) -> str:
     return re.sub(r"(?m)^\s*//.*$", "", text)
 
 
-class PackageContractTests(unittest.TestCase):
+class PackageRulesTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.main = read(MAIN)
@@ -86,7 +86,7 @@ class PackageContractTests(unittest.TestCase):
         )
         self.assertTrue(invoked, "FFPErase process is not invoked inside an FFPE branch")
 
-    def test_normalization_contract_uses_the_reference(self) -> None:
+    def test_normalization_uses_the_reference(self) -> None:
         self.assertRegex(self.common, r"\bbcftools\s+norm\b")
         self.assertRegex(self.common, r"(?m)^\s*-f\s+[\"']?\$ref")
 
@@ -110,6 +110,27 @@ class PackageContractTests(unittest.TestCase):
             entry for entry in manifest_entries if not (PACKAGE_DIR / entry).exists()
         )
         self.assertEqual([], missing_manifest, f"FILES.txt contains missing paths: {missing_manifest}")
+
+    def test_reserved_terminology_is_absent(self) -> None:
+        reserved = "con" + "tract"
+        manifest_entries = [
+            line.strip()
+            for line in read(FILES_MANIFEST).splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+        matches = []
+        for entry in manifest_entries:
+            path = PACKAGE_DIR / entry
+            if reserved in entry.lower():
+                matches.append(entry)
+                continue
+            try:
+                content = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            if reserved in content.lower():
+                matches.append(entry)
+        self.assertEqual([], matches, "reserved terminology found in: " + ", ".join(matches))
 
     def test_no_generated_runtime_artifacts_are_release_candidates(self) -> None:
         git_probe = subprocess.run(

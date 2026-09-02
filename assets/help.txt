@@ -9,6 +9,16 @@ ENTRY POINT
   The launcher auto-detects Nextflow syntax parser v2 or v1. Direct
   nextflow run main.nf usage bypasses that detection.
 
+NEXTFLOW RUN CONTROLS
+  -profile conda                Use the supplied Conda dependency profile.
+  -work-dir DIR                 Optional. Choose a persistent Nextflow work
+                                directory; otherwise Nextflow uses its default.
+  -resume                       Optional. Reuse completed tasks from the same
+                                work directory on a rerun.
+
+  Keep the same work directory when using -resume. Production examples include
+  both optional controls so interrupted runs can reuse completed work.
+
 REQUIRED MODE (choose exactly one)
   --fresh                       Common calling + BQSR by default + left alignment.
                                 Performs no FFPE assessment: no FFPE-specific
@@ -64,6 +74,18 @@ NORMALIZATION
   Both modes left-align every caller VCF and final VCF with bcftools norm
   against --ref. Normalization/indexing errors fail the workflow. Every
   normalized compressed VCF requires a .tbi; TBI-incompatible data fail.
+
+MINIMAL QUICK EXAMPLE: FRESH WITH BQSR
+  ./bin/run_pipeline.sh \
+    -profile conda \
+    --fresh \
+    --input /path/to/bams \
+    --outdir /path/to/fresh-results \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
+
+  --samples is optional. Without it, all BAMs resolved from --input are used.
+  For a deliberate no-BQSR run, replace --known_sites with --skip_bqsr.
 
 MAIN OUTPUTS
   <outdir>/final_vcf/<sample>.final_variants.vcf.gz

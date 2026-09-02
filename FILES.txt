@@ -1,6 +1,9 @@
 .github/workflows/ci.yml
 .gitignore
+FAQ.md
 FILES.txt
+Makefile
+NEWS.md
 README.md
 THIRD_PARTY.md
 assets/help.txt
@@ -21,6 +24,8 @@ envs/lowpass_variants.yml
 examples/lymphoma_genomewide.params.json
 examples/lymphoma_genomewide_caller_only.sh
 examples/lymphoma_genomewide_simplified.sh
+examples/run_ffpe.sh
+examples/run_fresh.sh
 install_nextflow.sh
 main.nf
 nextflow.config
@@ -29,7 +34,7 @@ tests/fixtures/nextflow
 tests/run_all.sh
 tests/test_fresh_pipeline_smoke.sh
 tests/test_left_alignment.sh
-tests/test_package_contract.py
+tests/test_package_rules.py
 tests/test_parser_smoke.sh
 tests/test_resolve_bams.py
 tests/test_run_pipeline.sh
