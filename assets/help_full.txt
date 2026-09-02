@@ -35,7 +35,10 @@ DOCKER IMAGE
   The versioned image used by -profile docker is:
     ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 
-  Install the release image:
+  This is a private package. Create a classic personal access token with the
+  read:packages scope, then authenticate and install the release image:
+    export GHCR_TOKEN='YOUR_CLASSIC_PAT'
+    printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u cfarkas --password-stdin
     docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 
   Before the registry tag is available, build the same tag from this checkout:

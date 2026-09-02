@@ -141,7 +141,7 @@ process PREPARE_REFERENCE {
     tag 'reference_sidecars'
     conda "${projectDir}/envs/lowpass_variants.yml"
     cpus 2
-    memory '8 GB'
+    memory params.memory
     time '4h'
     publishDir "${params.outdir}/logs", mode: 'copy', pattern: 'reference.ready.txt', overwrite: params.overwrite
 
@@ -172,7 +172,7 @@ process PREPARE_SCOPE {
     tag 'prepare_scope'
     conda "${projectDir}/envs/lowpass_variants.yml"
     cpus 2
-    memory '8 GB'
+    memory params.memory
     time '4h'
     publishDir "${params.outdir}/targets", mode: 'copy', pattern: 'targets.*.bed', overwrite: params.overwrite
     publishDir "${params.outdir}/targets", mode: 'copy', pattern: 'scope.env', overwrite: params.overwrite
@@ -547,7 +547,7 @@ process MUTECT2_ORIENTATION_MODEL {
     tag "${sample}"
     conda "${projectDir}/envs/lowpass_variants.yml"
     cpus 1
-    memory '8 GB'
+    memory params.mutect2_memory
     time params.quick_time
     maxForks params.max_mutect2_parallel
     publishDir "${params.outdir}/mutect2", mode: 'copy', pattern: '*orientation_artifact_prior.tar.gz', overwrite: params.overwrite
@@ -584,7 +584,7 @@ process MUTECT2_FILTER {
     tag "${sample}"
     conda "${projectDir}/envs/lowpass_variants.yml"
     cpus 2
-    memory '12 GB'
+    memory params.mutect2_memory
     time params.quick_time
     maxForks params.max_mutect2_parallel
     publishDir "${params.outdir}/mutect2", mode: 'copy', pattern: '*mutect2.candidate*', overwrite: params.overwrite

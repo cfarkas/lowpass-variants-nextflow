@@ -1,6 +1,6 @@
 # Release notes
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2026-09-02)
 
 - Unified the fresh-material and FFPE low-pass workflows behind
   `./bin/run_pipeline.sh` with exactly one material mode required per run.

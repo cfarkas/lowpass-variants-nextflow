@@ -58,14 +58,7 @@ jobs:
           '
 
       - name: Run one-variant fresh quickstart
-        run: |
-          set -Eeuo pipefail
-          docker run --rm --memory 16g lowpass-variants:test bash -c '
-            OUTDIR=/tmp/results NEXTFLOW_PROFILE= bash examples/run_minimal_fresh.sh
-            test -s /tmp/results/final_vcf/SAMPLE.final_variants.vcf.gz.tbi
-            actual="$(bcftools query -f "%CHROM\t%POS\t%REF\t%ALT\t%INFO/DECISION\t%INFO/VOTE_COUNT\n" /tmp/results/final_vcf/SAMPLE.final_variants.vcf.gz)"
-            test "$actual" = "$(printf "chr1\t25\tA\tC\tHIGH_CONFIDENCE\t2")"
-          '
+        run: docker run --rm lowpass-variants:test bash tests/test_fresh_quickstart.sh
 
   publish:
     needs: validate

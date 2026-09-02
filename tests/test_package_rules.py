@@ -65,6 +65,22 @@ class PackageRulesTests(unittest.TestCase):
         self.assertRegex(self.main_code, r"\bgatk\s+ApplyBQSR\b")
         self.assertRegex(self.main_code, r"--known-sites\b")
 
+    def test_quickstart_process_memory_uses_overridable_parameters(self) -> None:
+        expected = {
+            "PREPARE_REFERENCE": "memory",
+            "PREPARE_SCOPE": "memory",
+            "MUTECT2_ORIENTATION_MODEL": "mutect2_memory",
+            "MUTECT2_FILTER": "mutect2_memory",
+        }
+        for process_name, parameter in expected.items():
+            with self.subTest(process=process_name):
+                body = re.search(
+                    rf"(?ms)^process\s+{process_name}\s*\{{(.*?)(?=^process\s+|\Z)",
+                    self.main_code,
+                )
+                self.assertIsNotNone(body, f"missing process: {process_name}")
+                self.assertRegex(body.group(1), rf"(?m)^\s*memory\s+params\.{parameter}\s*$")
+
     def test_ffperase_process_is_called_only_from_an_ffpe_branch(self) -> None:
         process_names = re.findall(
             r"(?m)^\s*process\s+([A-Z0-9_]*FFPERASE[A-Z0-9_]*)\s*\{",
