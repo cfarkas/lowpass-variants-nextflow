@@ -30,6 +30,12 @@ printf '  output: %s\n' "$OUTDIR"
   --min_alt_reads 4 \
   --min_af 0.20 \
   --vote_threshold 2 \
+  --memory '4 GB' \
+  --mutect2_memory '4 GB' \
+  --freebayes_memory '2 GB' \
+  --bcftools_memory '2 GB' \
+  --normalize_memory '2 GB' \
+  --finalize_memory '2 GB' \
   --threads 1 \
   --prepare_cpus 1 \
   --mutect2_cpus 1 \

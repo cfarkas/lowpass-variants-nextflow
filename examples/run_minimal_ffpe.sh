@@ -28,6 +28,12 @@ printf '  output: %s\n' "$OUTDIR"
   --skip_freebayes true \
   --skip_bcftools true \
   --auto_thresholds false \
+  --memory '4 GB' \
+  --mutect2_memory '4 GB' \
+  --freebayes_memory '2 GB' \
+  --bcftools_memory '2 GB' \
+  --normalize_memory '2 GB' \
+  --finalize_memory '2 GB' \
   --threads 1 \
   --prepare_cpus 1 \
   --mutect2_cpus 1 \
@@ -46,6 +52,7 @@ printf '  output: %s\n' "$OUTDIR"
   --ffperase_classify_threads 1 \
   --ffperase_sample_jobs 1 \
   --ffperase_picard_jobs 1 \
+  --ffperase_memory '4 GB' \
   --ffperase_fail_on_error true
 
 printf 'FFPE smoke status: %s\n' "$OUTDIR/logs/ffperase.done.txt"
