@@ -51,16 +51,15 @@ required for a new run.
 
 ## How do I use the Docker profile?
 
-The profile uses `ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Pull it
-with:
+The profile uses the public image
+`ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Pull it anonymously with:
 
 ```bash
 docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 ```
 
 Then use `-profile docker` in place of `-profile conda`. Docker also pulls the
-configured image on demand. Before the registry tag is available, build the
-same tag locally with:
+configured image on demand. To build the same tag locally instead:
 
 ```bash
 docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .

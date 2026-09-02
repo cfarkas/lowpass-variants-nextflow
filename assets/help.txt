@@ -22,13 +22,13 @@ NEXTFLOW RUN CONTROLS
   both optional controls so interrupted runs can reuse completed work.
 
 DOCKER IMAGE
-  The docker profile uses:
+  The docker profile uses this public image:
     ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 
-  Install it with:
+  Pull it anonymously with:
     docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 
-  Before that tag is available, build it locally with:
+  To build it locally instead:
     docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .
 
   Host python3 is required for input discovery. Bundled Docker checks:

@@ -105,18 +105,15 @@ Verify the package and parser-selection launcher:
 
 The recommended execution profile is `-profile conda`, which lets Nextflow create and reuse the declared environments in `envs/`. If all required tools are supplied by another environment or site profile, the Conda profile may be omitted.
 
-The alternative `-profile docker` runs pipeline tasks in the versioned image
-`ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Because this is a private
-package, create a classic personal access token with the `read:packages` scope,
-then authenticate and pull it with:
+The alternative `-profile docker` runs pipeline tasks in the public versioned
+image `ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Pull it anonymously
+with:
 
 ~~~bash
-export GHCR_TOKEN='YOUR_CLASSIC_PAT'
-printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u cfarkas --password-stdin
 docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
 ~~~
 
-Before the registry tag is available, build the same tag from this checkout:
+To build the same tag locally from this checkout instead:
 
 ~~~bash
 docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .
