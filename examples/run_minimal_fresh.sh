@@ -12,7 +12,7 @@ if [[ -n "$NEXTFLOW_PROFILE" ]]; then
   PROFILE_ARGS=(-profile "$NEXTFLOW_PROFILE")
 fi
 
-printf 'Running bundled fresh smoke example\n'
+printf 'Running bundled one-variant fresh quickstart\n'
 printf '  input:  %s\n' "$DATA_DIR/SAMPLE.bam"
 printf '  output: %s\n' "$OUTDIR"
 
@@ -25,9 +25,11 @@ printf '  output: %s\n' "$OUTDIR"
   --known_sites "${DATA_DIR}/known-sites.vcf.gz" \
   --overwrite true \
   --skip_mutect2 true \
-  --skip_freebayes true \
-  --skip_bcftools true \
   --auto_thresholds false \
+  --min_dp 10 \
+  --min_alt_reads 4 \
+  --min_af 0.20 \
+  --vote_threshold 2 \
   --threads 1 \
   --prepare_cpus 1 \
   --mutect2_cpus 1 \
@@ -43,5 +45,5 @@ printf '  output: %s\n' "$OUTDIR"
   --max_normalize_parallel 1 \
   --max_finalize_parallel 1
 
-printf 'Fresh smoke result: %s\n' \
+printf 'Fresh quickstart result (one SNV at chr1:25): %s\n' \
   "$OUTDIR/final_vcf/SAMPLE.final_variants.vcf.gz"

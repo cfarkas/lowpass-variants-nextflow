@@ -35,9 +35,11 @@ grep -Fq $'@SQ\tSN:chr1\tLN:200' "${DATA_DIR}/tiny.dict" ||
 
 samtools quickcheck "${DATA_DIR}/SAMPLE.bam" || fail "bundled BAM failed quickcheck"
 samtools idxstats "${DATA_DIR}/SAMPLE.bam" |
-  grep -Fqx $'chr1\t200\t2\t0' || fail "unexpected BAM index statistics"
+  grep -Fqx $'chr1\t200\t12\t0' || fail "unexpected BAM index statistics"
 samtools view -H --no-PG "${DATA_DIR}/SAMPLE.bam" |
   grep -Fq $'@RG\tID:rg1\tSM:SAMPLE' || fail "BAM read group/sample is missing"
+[[ "$(samtools view "${DATA_DIR}/SAMPLE.bam" | awk '$4 <= 25 && substr($10, 26 - $4, 1) == "C" {n++} END {print n+0}')" == 12 ]] ||
+  fail "bundled BAM does not contain twelve reads supporting chr1:25 A>C"
 
 bcftools index --stats "${DATA_DIR}/known-sites.vcf.gz" |
   grep -Fqx $'chr1\t200\t1' || fail "unexpected known-sites index statistics"
@@ -58,6 +60,11 @@ env \
   bash "${PACKAGE_DIR}/examples/run_minimal_fresh.sh" >/dev/null
 grep -Fq -- '--fresh' "$FAKE_LOG" || fail "fresh example did not forward --fresh"
 grep -Fq -- "${DATA_DIR}/SAMPLE.bam" "$FAKE_LOG" || fail "fresh example did not use bundled BAM"
+grep -Fq -- '--skip_mutect2' "$FAKE_LOG" || fail "fresh quickstart does not skip Mutect2"
+if grep -Fq -- '--skip_freebayes' "$FAKE_LOG" || grep -Fq -- '--skip_bcftools' "$FAKE_LOG"; then
+  fail "fresh quickstart unexpectedly skips a two-vote caller"
+fi
+grep -Fq -- '--vote_threshold' "$FAKE_LOG" || fail "fresh quickstart does not set its vote threshold"
 
 : > "$FAKE_LOG"
 env \
@@ -70,4 +77,4 @@ env \
 grep -Fq -- '--ffpe' "$FAKE_LOG" || fail "FFPE example did not forward --ffpe"
 grep -Fq -- '--skip_mutect2' "$FAKE_LOG" || fail "FFPE smoke does not skip callers"
 
-printf 'ok - bundled synthetic data and minimal fresh/FFPE launchers are valid\n'
+printf 'ok - bundled one-variant fresh quickstart and empty FFPE launcher are valid\n'

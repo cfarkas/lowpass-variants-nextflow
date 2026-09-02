@@ -2869,6 +2869,8 @@ write_nf_config() {
   local hf_hub="$hf_home/hub"
   local transformers="$hf_home/transformers"
   local mpl="$sample_cache_root/matplotlib"
+  local docker_user
+  docker_user="$(id -u):$(id -g)"
   mkdir -p "$home_cache" "$xdg_cache" "$hf_home" "$hf_hub" "$transformers" "$mpl"
 
   local nxf_home_bind="${NXF_HOME:-$HOME/.nextflow}"
@@ -2908,7 +2910,7 @@ env {
 
 docker {
   enabled = true
-  runOptions = '-v ${sample_cache_root}:${sample_cache_root} -v ${bind_root}:${bind_root} -v ${ref_dir}:${ref_dir} -v ${nxf_home_bind}:${nxf_home_bind} -e HOME=${home_cache} -e XDG_CACHE_HOME=${xdg_cache} -e HF_HOME=${hf_home} -e HUGGINGFACE_HUB_CACHE=${hf_hub} -e TRANSFORMERS_CACHE=${transformers} -e MPLCONFIGDIR=${mpl}'
+  runOptions = '-u ${docker_user} -v ${sample_cache_root}:${sample_cache_root} -v ${bind_root}:${bind_root} -v ${ref_dir}:${ref_dir} -v ${nxf_home_bind}:${nxf_home_bind} -e HOME=${home_cache} -e XDG_CACHE_HOME=${xdg_cache} -e HF_HOME=${hf_home} -e HUGGINGFACE_HUB_CACHE=${hf_hub} -e TRANSFORMERS_CACHE=${transformers} -e MPLCONFIGDIR=${mpl}'
 }
 
 apptainer.enabled = false

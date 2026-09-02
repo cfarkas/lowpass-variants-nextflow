@@ -124,8 +124,7 @@ process RESOLVE_BAMS {
     def metadataArg = metadataPath ? "--database-tsv \"${metadataPath}\"" : ''
     """
     set -Eeuo pipefail
-    mkdir -p "${params.outdir}/reports"
-    python "${projectDir}/bin/resolve_bams.py" \
+    python3 "${projectDir}/bin/resolve_bams.py" \
       --input "${params.input}" \
       --output selected_samples.tsv \
       --samples "${params.samples}" \

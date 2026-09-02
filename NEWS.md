@@ -17,7 +17,11 @@
   material-mode separation, package rules, VCF normalization, and both Nextflow
   parsers. An optional smoke test exercises a real fresh run with BQSR.
 - Added a committed artificial BAM/reference/known-sites fixture and one-command
-  minimal fresh and empty-variant FFPE smoke examples.
+  fresh quickstart that produces exactly one two-caller SNV, plus an
+  empty-variant FFPE branch check.
+- Added a versioned Docker image build and `docker` profile targeting
+  `ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`, with explicit FFPE daemon
+  socket and separately fetched upstream-asset guidance.
 
 The FFPErase integration remains subject to its upstream terms. See
 [THIRD_PARTY.md](THIRD_PARTY.md).

@@ -12,7 +12,7 @@ case "${1:-}" in
     ;;
   ""|-h|--help)
     printf 'Usage: %s fresh|ffpe\n' "$0"
-    printf 'Runs the bundled synthetic smoke example for the selected mode.\n'
+    printf 'Runs the one-variant fresh quickstart or header-only FFPE check.\n'
     ;;
   *)
     printf 'Unknown example mode: %s\n' "$1" >&2

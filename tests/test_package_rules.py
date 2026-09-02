@@ -113,13 +113,26 @@ class PackageRulesTests(unittest.TestCase):
 
     def test_reserved_terminology_is_absent(self) -> None:
         reserved_terms = ("con" + "tract", "mini" + "map2")
-        manifest_entries = [
-            line.strip()
-            for line in read(FILES_MANIFEST).splitlines()
-            if line.strip() and not line.lstrip().startswith("#")
-        ]
+        git_probe = subprocess.run(
+            ["git", "-C", str(PACKAGE_DIR), "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if git_probe.returncode == 0:
+            manifest_entries = subprocess.run(
+                ["git", "-C", str(PACKAGE_DIR), "ls-files", "-z"],
+                check=True,
+                stdout=subprocess.PIPE,
+            ).stdout.decode("utf-8").split("\0")
+        else:
+            manifest_entries = [
+                line.strip()
+                for line in read(FILES_MANIFEST).splitlines()
+                if line.strip() and not line.lstrip().startswith("#")
+            ]
         matches = []
-        for entry in manifest_entries:
+        for entry in filter(None, manifest_entries):
             path = PACKAGE_DIR / entry
             if any(term in entry.lower() for term in reserved_terms):
                 matches.append(entry)
@@ -131,6 +144,35 @@ class PackageRulesTests(unittest.TestCase):
             if any(term in content.lower() for term in reserved_terms):
                 matches.append(entry)
         self.assertEqual([], matches, "reserved terminology found in: " + ", ".join(matches))
+
+    def test_container_release_files_and_docker_profile_exist(self) -> None:
+        required = [
+            Path("Dockerfile"),
+            Path(".dockerignore"),
+            Path("docker/environment.yml"),
+            Path(".github/workflows/container.yml"),
+        ]
+        missing = sorted(str(path) for path in required if not (PACKAGE_DIR / path).is_file())
+        self.assertEqual([], missing, "missing container release files: " + ", ".join(missing))
+
+        dockerfile = read(PACKAGE_DIR / "Dockerfile")
+        workflow = read(PACKAGE_DIR / ".github/workflows/container.yml")
+        from_lines = [line.strip() for line in dockerfile.splitlines() if line.startswith("FROM ")]
+        self.assertTrue(from_lines, "Dockerfile has no base image")
+        for line in from_lines:
+            self.assertRegex(line, r"@sha256:[0-9a-f]{64}(?:\s|$)")
+
+        self.assertRegex(self.config, r"(?m)^\s*docker\s*\{\s*$")
+        self.assertRegex(self.config, r"(?m)^\s*docker\.enabled\s*=\s*true\s*$")
+        self.assertIn("container = params.pipeline_container", self.config)
+        self.assertRegex(
+            self.config,
+            r"(?m)^\s*pipeline_container\s*=\s*['\"]ghcr\.io/",
+        )
+        self.assertIn("packages: write", workflow)
+        self.assertIn("${{ secrets.GITHUB_TOKEN }}", workflow)
+        self.assertIn("linux/amd64", workflow)
+        self.assertIn("org.opencontainers.image.source", dockerfile)
 
     def test_no_generated_runtime_artifacts_are_release_candidates(self) -> None:
         git_probe = subprocess.run(

@@ -10,8 +10,8 @@ help:
 	  '  help              Show this target list.' \
 	  '  lint              Check Bash, Python, and Nextflow syntax.' \
 	  '  test              Run the normal aggregate test suite.' \
-	  '  example-fresh     Run the bundled synthetic fresh smoke.' \
-	  '  example-ffpe      Run the bundled synthetic FFPE smoke.' \
+	  '  example-fresh     Run the bundled one-variant fresh quickstart.' \
+	  '  example-ffpe      Run the bundled header-only FFPE branch check.' \
 	  '  install-nextflow  Run the included Nextflow installer.'
 
 lint:

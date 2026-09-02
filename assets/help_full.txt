@@ -19,6 +19,10 @@ NEXTFLOW RUN CONTROLS
       Use the supplied Conda dependency profile. It can be omitted when the
       required tools are provided by another profile or execution environment.
 
+  -profile docker
+      Run tasks in ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0. A local
+      Docker daemon is required.
+
   -work-dir DIR
       Optional. Store Nextflow task work in a chosen persistent directory.
       Without this option, Nextflow uses its default work directory.
@@ -26,6 +30,24 @@ NEXTFLOW RUN CONTROLS
   -resume
       Optional. Reuse completed tasks whose cache and files remain in the same
       work directory. Keep -work-dir unchanged between resumed runs.
+
+DOCKER IMAGE
+  The versioned image used by -profile docker is:
+    ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
+
+  Install the release image:
+    docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
+
+  Before the registry tag is available, build the same tag from this checkout:
+    docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .
+
+  The launcher and Nextflow run on the host. The image supplies tools for task
+  execution. Docker may pull the configured image automatically. Host python3
+  performs input discovery before BAMs are staged.
+
+  Bundled checks with Docker:
+    NEXTFLOW_PROFILE=docker bash examples/run_minimal_fresh.sh
+    NEXTFLOW_PROFILE=docker bash examples/run_minimal_ffpe.sh
 
 MODE: EXACTLY ONE IS REQUIRED
   --fresh
@@ -211,13 +233,40 @@ MINIMAL REAL-DATA EXAMPLE: FFPE WITH BQSR
     --ref /path/to/reference.fa \
     --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
 
+MINIMAL REAL-DATA EXAMPLE: FRESH WITH DOCKER
+  ./bin/run_pipeline.sh \
+    -profile docker \
+    --fresh \
+    --input /path/to/SAMPLE.bam \
+    --outdir /path/to/fresh-results \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
+
+MINIMAL REAL-DATA EXAMPLE: FFPE WITH DOCKER
+  ./bin/run_pipeline.sh \
+    -profile docker \
+    --ffpe \
+    --input /path/to/SAMPLE.bam \
+    --outdir /path/to/ffpe-results \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
+
+  Use absolute host paths in Docker runs. FFPE Docker mode mounts the local
+  daemon socket into the FFPErase orchestration task so it can start its own
+  runtime image. Socket access is privileged-equivalent host access; use only
+  trusted workflow code and images. The upstream workflow, its runtime image,
+  and models are not bundled in the main pipeline image and are fetched
+  separately when needed unless cached.
+
 BUNDLED SYNTHETIC SMOKE EXAMPLES
   bash examples/run_minimal_fresh.sh
   bash examples/run_minimal_ffpe.sh
 
-  The committed inputs are under examples/tiny/. The scripts run BQSR and skip
-  all callers. Their empty final VCFs validate workflow wiring; the FFPE smoke
-  does not test non-empty FFPErase model inference.
+  The committed inputs are under examples/tiny/. The fresh quickstart runs
+  BQSR, skips Mutect2, and calls with FreeBayes and BCFtools. Its final VCF has
+  exactly chr1:25 A>C with two votes. The FFPE check runs BQSR but skips all
+  callers, producing a header-only VCF; it does not test non-empty FFPErase
+  model inference.
 
 COMPLETE RUN EXAMPLES
   The fresh and FFPE examples intentionally include the optional -work-dir and

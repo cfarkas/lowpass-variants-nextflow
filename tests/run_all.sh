@@ -33,8 +33,9 @@ fi
 
 if [[ "${RUN_FRESH_PIPELINE_SMOKE:-false}" == "true" ]]; then
   run_test 'optional real fresh/BQSR pipeline smoke' "${TEST_DIR}/test_fresh_pipeline_smoke.sh"
+  run_test 'optional bundled fresh one-variant quickstart' "${TEST_DIR}/test_fresh_quickstart.sh"
 else
-  printf '\nSKIP: optional fresh/BQSR workflow smoke (set RUN_FRESH_PIPELINE_SMOKE=true)\n'
+  printf '\nSKIP: optional fresh/BQSR and bundled quickstart smokes (set RUN_FRESH_PIPELINE_SMOKE=true)\n'
 fi
 
 if [[ "${RUN_FFPE_PIPELINE_SMOKE:-false}" == "true" ]]; then

@@ -18,11 +18,12 @@ bash examples/run_minimal_fresh.sh
 bash examples/run_minimal_ffpe.sh
 ```
 
-The examples run BQSR but skip all three callers, producing a header-only final
-VCF. They are installation smoke checks, not biological benchmarks. The FFPE
-example verifies empty-variant FFPE handling; meaningful FFPErase
-classification still requires real variants and the external workflow, image,
-and models.
+The fresh quickstart runs BQSR, skips Mutect2, and calls with FreeBayes and
+BCFtools. Its final VCF contains exactly `chr1:25 A>C` with two supporting
+callers. The FFPE check runs BQSR but skips all callers, producing a header-only
+final VCF and verifying empty-variant FFPE handling. These are installation
+checks, not biological benchmarks; meaningful FFPErase classification still
+requires real variants and the external workflow, image, and models.
 
 ## Why does the workflow ask for `--fresh` or `--ffpe`?
 
@@ -47,6 +48,38 @@ No. Without it, Nextflow uses `./work` in the directory where the command is
 launched. Set `-work-dir` when you want task files on a larger or persistent
 filesystem. It is especially useful with `-resume`, but neither option is
 required for a new run.
+
+## How do I use the Docker profile?
+
+The profile uses `ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Pull it
+with:
+
+```bash
+docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
+```
+
+Then use `-profile docker` in place of `-profile conda`. Docker also pulls the
+configured image on demand. Before the registry tag is available, build the
+same tag locally with:
+
+```bash
+docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .
+```
+
+The lightweight input-discovery step runs before BAMs are staged and requires
+`python3` on the host. Run the bundled checks in Docker mode with:
+
+```bash
+NEXTFLOW_PROFILE=docker bash examples/run_minimal_fresh.sh
+NEXTFLOW_PROFILE=docker bash examples/run_minimal_ffpe.sh
+```
+
+Fresh runs require normal access to the local Docker daemon. For FFPE runs, the
+profile additionally mounts `/var/run/docker.sock` into the FFPErase task so
+the external workflow can launch its own image. Access to that socket is
+privileged-equivalent host access, so run only trusted workflow code and
+images. The upstream FFPErase workflow, runtime image, and models are not in
+the main image and are fetched separately when needed unless already cached.
 
 ## Will the workflow modify my input BAM or reference directory?
 

@@ -1,8 +1,8 @@
 # Tiny synthetic example data
 
-This directory contains a 200-base artificial reference, two artificial reads,
-and one artificial known site. It contains no human, patient, or observed
-biological sequence data.
+This directory contains a 200-base artificial reference, twelve artificial
+reads supporting one SNV, and one artificial known site. It contains no human,
+patient, or observed biological sequence data.
 
 The committed BAM and indexes make the two smoke examples runnable immediately
 after the software requirements are installed:
@@ -20,11 +20,13 @@ by default; set `NEXTFLOW_PROFILE=` only when every required tool is already on
 `PATH`.
 
 These are installation and workflow-wiring checks, not variant-analysis
-benchmarks. They run real BQSR but deliberately skip Mutect2, FreeBayes, and
-BCFtools calling, so the final VCF is header-only. The FFPE example exercises
-the FFPE branch, Picard artifact metrics, status handling, and VCF annotation;
-with no variants, its SNV and indel classifications are recorded as
-`SKIP_NO_VARIANTS`. It does not validate non-empty FFPErase model inference.
+benchmarks. The fresh quickstart runs real BQSR, skips Mutect2, and calls with
+FreeBayes and BCFtools. Its final VCF contains exactly `chr1:25 A>C`, with both
+callers contributing (`VOTE_COUNT=2`). The FFPE example runs BQSR but skips all
+callers, so its final VCF is header-only. It exercises the FFPE branch, Picard
+artifact metrics, status handling, and VCF annotation; its SNV and indel
+classifications are recorded as `SKIP_NO_VARIANTS`. It does not validate
+non-empty FFPErase model inference.
 
 Files:
 

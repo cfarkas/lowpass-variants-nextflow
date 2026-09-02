@@ -18,11 +18,15 @@ bash examples/run_minimal_fresh.sh
 The repository includes the artificial BAM, BAM index, 200-base reference,
 reference sidecars, known-sites VCF, and VCF index under `examples/tiny/`.
 The first run may take longer while Nextflow creates the supplied Conda
-environment. Its main result is:
+environment. This quickstart performs BQSR, skips Mutect2, and calls with
+FreeBayes and BCFtools. Its main result is:
 
 ~~~text
 example-results/minimal-fresh/final_vcf/SAMPLE.final_variants.vcf.gz
 ~~~
+
+That VCF contains exactly one synthetic call, `chr1:25 A>C`, supported by both
+enabled callers (`VOTE_COUNT=2`).
 
 Run the bundled FFPE branch check with:
 
@@ -30,14 +34,14 @@ Run the bundled FFPE branch check with:
 bash examples/run_minimal_ffpe.sh
 ~~~
 
-The synthetic examples run real BQSR but deliberately skip all callers, so
-their final VCFs are header-only. They verify installation and workflow wiring,
-not biological calling accuracy. The FFPE example reaches FFPE orchestration,
+The FFPE check also runs real BQSR, but deliberately skips all callers and
+therefore produces a header-only final VCF. It reaches FFPE orchestration,
 Picard metrics, empty-variant status handling, and annotation without performing
 non-empty model inference. A host Apptainer, Singularity, or Docker executable
-is still required. See [examples/tiny/README.md](examples/tiny/README.md).
+is still required. These examples verify installation and workflow wiring, not
+biological calling accuracy. See [examples/tiny/README.md](examples/tiny/README.md).
 
-Neither smoke command needs `-work-dir` or `-resume`; Nextflow uses `./work` in
+Neither bundled command needs `-work-dir` or `-resume`; Nextflow uses `./work` in
 the launch directory. Use the real-data commands below for an analysis.
 
 ## Table of Contents
@@ -75,6 +79,8 @@ Requirements:
 - Linux with Java 17 or newer.
 - Nextflow 24.10 or newer.
 - Conda or Mamba when using the supplied `conda` profile.
+- Docker with access to a local daemon when using the supplied `docker` profile.
+- Python 3 on the host for input discovery when using the `docker` profile.
 - For FFPErase: Apptainer, Singularity, or Docker, plus access to the upstream workflow, container, and models.
 
 Install from the private GitHub repository:
@@ -98,6 +104,30 @@ Verify the package and parser-selection launcher:
 ~~~
 
 The recommended execution profile is `-profile conda`, which lets Nextflow create and reuse the declared environments in `envs/`. If all required tools are supplied by another environment or site profile, the Conda profile may be omitted.
+
+The alternative `-profile docker` runs pipeline tasks in the versioned image
+`ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0`. Pull it with:
+
+~~~bash
+docker pull ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0
+~~~
+
+Before the registry tag is available, build the same tag from this checkout:
+
+~~~bash
+docker build -t ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0 .
+~~~
+
+The launcher and Nextflow still run on the host; the image supplies the tools
+used by pipeline tasks. Docker will pull the configured image automatically if
+it is not already local.
+
+Run both bundled checks through Docker with:
+
+~~~bash
+NEXTFLOW_PROFILE=docker bash examples/run_minimal_fresh.sh
+NEXTFLOW_PROFILE=docker bash examples/run_minimal_ffpe.sh
+~~~
 
 ### General usage
 
@@ -136,6 +166,7 @@ These are Nextflow options, not mandatory pipeline parameters:
 - `-work-dir DIR` places task state in a selected directory. Without it, Nextflow uses `./work` in the launch directory.
 - `-resume` reuses completed tasks from the same work directory after an interruption or rerun.
 - `-profile conda` selects the supplied dependency environments. It is recommended unless tools are provided another way.
+- `-profile docker` runs tasks in `ghcr.io/cfarkas/lowpass-variants-nextflow:1.0.0` and requires a local Docker daemon.
 
 For large BAM workflows, use a persistent work directory with adequate free space and keep it unchanged when resuming.
 
@@ -209,6 +240,38 @@ For either mode, replace `--known_sites ...` with `--skip_bqsr` only when BQSR
 is deliberately inappropriate. A non-empty FFPE analysis may download the
 pinned upstream workflow, container image, and models unless the same task is
 resumed from populated caches.
+
+#### Minimal fresh analysis with Docker
+
+~~~bash
+./bin/run_pipeline.sh \
+  -profile docker \
+  --fresh \
+  --input /data/SAMPLE_01.bam \
+  --outdir /data/results/fresh \
+  --ref /refs/reference.fa \
+  --known_sites /refs/dbsnp.vcf.gz,/refs/known_indels.vcf.gz
+~~~
+
+#### Minimal FFPE analysis with Docker
+
+~~~bash
+./bin/run_pipeline.sh \
+  -profile docker \
+  --ffpe \
+  --input /data/SAMPLE_01.bam \
+  --outdir /data/results/ffpe \
+  --ref /refs/reference.fa \
+  --known_sites /refs/dbsnp.vcf.gz,/refs/known_indels.vcf.gz
+~~~
+
+Use absolute host paths for Docker runs. In FFPE mode, the profile mounts the
+local Docker daemon socket into the FFPErase orchestration task so it can launch
+the separate upstream runtime image. Socket access is privileged-equivalent
+host access; use this profile only with trusted workflow code and images. The
+main pipeline image does not bundle the upstream FFPErase workflow, its runtime
+image, or its models. A non-empty FFPE run fetches those assets separately
+unless they are already cached.
 
 ### Complete run examples
 
@@ -381,6 +444,7 @@ Operational answers, including recovery after an interrupted download, are in
 | `NEWS.md` | User-visible release notes. |
 | `Makefile` | Stable `help`, `lint`, `test`, and `install-nextflow` commands. |
 | `main.nf`, `nextflow.config` | Workflow graph, defaults, profiles, and reports. |
+| `Dockerfile`, `docker/` | Versioned pipeline-task image definition and container runtime dependencies. |
 | `bin/` | Launcher, input resolver, finalization, and FFPErase helpers. |
 | `envs/`, `environment.yml` | Reproducible Conda environments. |
 | `examples/` | Ready-to-run synthetic smoke data plus production templates. |
@@ -400,9 +464,10 @@ bash tests/run_all.sh
 The normal suite validates the committed synthetic BAM/reference/resources and
 checks that both minimal launchers forward the correct mode and inputs.
 
-An opt-in synthetic run also exercises real GATK BQSR and the complete fresh
-workflow with callers skipped. If the tools are in a separate environment,
-set `LOWPASS_TEST_TOOL_ENV` to that environment prefix:
+An opt-in synthetic run also exercises real GATK BQSR and the fresh workflow
+with FreeBayes and BCFtools enabled. It asserts the single `chr1:25 A>C` call
+and two-caller support. If the tools are in a separate environment, set
+`LOWPASS_TEST_TOOL_ENV` to that environment prefix:
 
 ~~~bash
 RUN_FRESH_PIPELINE_SMOKE=true \
