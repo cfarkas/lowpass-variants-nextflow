@@ -38,7 +38,8 @@ test_autodetects_v2_and_forwards_arguments() {
   local log="${TEST_TMP}/autodetect-v2.log"
   local output
   output="$(
-    env -u NXF_SYNTAX_PARSER -u NEXTFLOW_BIN \
+    env -u NXF_SYNTAX_PARSER \
+      NEXTFLOW_BIN="${FAKE_BIN_DIR}/nextflow" \
       PATH="${FAKE_BIN_DIR}:${PATH}" \
       FAKE_NF_LOG="$log" \
       FAKE_NF_MODE=v2_only \
@@ -57,7 +58,8 @@ test_falls_back_to_v1() {
   local log="${TEST_TMP}/fallback-v1.log"
   local output
   output="$(
-    env -u NXF_SYNTAX_PARSER -u NEXTFLOW_BIN \
+    env -u NXF_SYNTAX_PARSER \
+      NEXTFLOW_BIN="${FAKE_BIN_DIR}/nextflow" \
       PATH="${FAKE_BIN_DIR}:${PATH}" \
       FAKE_NF_LOG="$log" \
       FAKE_NF_MODE=v1_only \
@@ -76,7 +78,8 @@ test_respects_explicit_valid_parser() {
   local log="${TEST_TMP}/explicit-v1.log"
   local output
   output="$(
-    env -u NEXTFLOW_BIN \
+    env \
+      NEXTFLOW_BIN="${FAKE_BIN_DIR}/nextflow" \
       PATH="${FAKE_BIN_DIR}:${PATH}" \
       FAKE_NF_LOG="$log" \
       FAKE_NF_MODE=both \
@@ -94,7 +97,8 @@ test_invalid_parser_is_replaced_by_autodetection() {
   local log="${TEST_TMP}/invalid-parser.log"
   local output
   output="$(
-    env -u NEXTFLOW_BIN \
+    env \
+      NEXTFLOW_BIN="${FAKE_BIN_DIR}/nextflow" \
       PATH="${FAKE_BIN_DIR}:${PATH}" \
       FAKE_NF_LOG="$log" \
       FAKE_NF_MODE=v2_only \
@@ -113,7 +117,8 @@ test_reports_when_neither_parser_works() {
   local output
   local status=0
   output="$(
-    env -u NXF_SYNTAX_PARSER -u NEXTFLOW_BIN \
+    env -u NXF_SYNTAX_PARSER \
+      NEXTFLOW_BIN="${FAKE_BIN_DIR}/nextflow" \
       PATH="${FAKE_BIN_DIR}:${PATH}" \
       FAKE_NF_LOG="$log" \
       FAKE_NF_MODE=neither \

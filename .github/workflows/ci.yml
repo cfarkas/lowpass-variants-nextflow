@@ -34,8 +34,11 @@ jobs:
         run: |
           set -Eeuo pipefail
           mkdir -p "${HOME}/.local/bin"
-          curl -fsSL https://get.nextflow.io | bash
-          install -m 0755 nextflow "${HOME}/.local/bin/nextflow"
+          (
+            cd "${RUNNER_TEMP}"
+            curl -fsSL https://get.nextflow.io | bash
+            install -m 0755 nextflow "${HOME}/.local/bin/nextflow"
+          )
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
           "${HOME}/.local/bin/nextflow" -version
 
