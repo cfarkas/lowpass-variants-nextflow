@@ -112,7 +112,7 @@ class PackageRulesTests(unittest.TestCase):
         self.assertEqual([], missing_manifest, f"FILES.txt contains missing paths: {missing_manifest}")
 
     def test_reserved_terminology_is_absent(self) -> None:
-        reserved = "con" + "tract"
+        reserved_terms = ("con" + "tract", "mini" + "map2")
         manifest_entries = [
             line.strip()
             for line in read(FILES_MANIFEST).splitlines()
@@ -121,14 +121,14 @@ class PackageRulesTests(unittest.TestCase):
         matches = []
         for entry in manifest_entries:
             path = PACKAGE_DIR / entry
-            if reserved in entry.lower():
+            if any(term in entry.lower() for term in reserved_terms):
                 matches.append(entry)
                 continue
             try:
                 content = path.read_text(encoding="utf-8")
             except UnicodeDecodeError:
                 continue
-            if reserved in content.lower():
+            if any(term in content.lower() for term in reserved_terms):
                 matches.append(entry)
         self.assertEqual([], matches, "reserved terminology found in: " + ", ".join(matches))
 

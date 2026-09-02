@@ -7,6 +7,23 @@ installed Nextflow with syntax parser v2 and then v1, selects a working parser,
 and forwards the original arguments. Calling `nextflow run main.nf` directly
 bypasses that selection.
 
+## Are runnable example data included?
+
+Yes. `examples/tiny/` contains a synthetic BAM and index, reference and
+sidecars, and an indexed known-sites VCF. After installing Nextflow and Conda,
+run:
+
+```bash
+bash examples/run_minimal_fresh.sh
+bash examples/run_minimal_ffpe.sh
+```
+
+The examples run BQSR but skip all three callers, producing a header-only final
+VCF. They are installation smoke checks, not biological benchmarks. The FFPE
+example verifies empty-variant FFPE handling; meaningful FFPErase
+classification still requires real variants and the external workflow, image,
+and models.
+
 ## Why does the workflow ask for `--fresh` or `--ffpe`?
 
 Every non-help run must select exactly one material mode. Supplying both flags,
@@ -56,9 +73,10 @@ when reproducible external artifacts are required.
 ## Where are the main results?
 
 The common per-sample results are under `<outdir>/final_vcf/` and
-`<outdir>/reports/per_sample/`. FFPE mode additionally publishes raw status and
-classification material below `<outdir>/ffperase_post/` and annotated VCFs
-below `<outdir>/ffperase_classification/`.
+`<outdir>/reports/per_sample/`. FFPE mode additionally publishes status under
+`<outdir>/ffperase_status/`, Picard summaries under
+`<outdir>/ffperase_picard_metrics_summary/`, and classifications plus annotated
+VCFs below `<outdir>/ffperase_classification/`.
 
 ## Why was an existing output not replaced?
 

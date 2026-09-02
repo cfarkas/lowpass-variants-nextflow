@@ -34,3 +34,6 @@ htmlcov/
 .env.*
 *.local.config
 secrets/
+
+# Bundled example outputs
+example-results/

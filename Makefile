@@ -2,7 +2,7 @@ SHELL := /bin/bash
 PYTHON ?= python3
 NEXTFLOW ?= nextflow
 
-.PHONY: help lint test install-nextflow
+.PHONY: help lint test example-fresh example-ffpe install-nextflow
 
 help:
 	@printf '%s\n' \
@@ -10,6 +10,8 @@ help:
 	  '  help              Show this target list.' \
 	  '  lint              Check Bash, Python, and Nextflow syntax.' \
 	  '  test              Run the normal aggregate test suite.' \
+	  '  example-fresh     Run the bundled synthetic fresh smoke.' \
+	  '  example-ffpe      Run the bundled synthetic FFPE smoke.' \
 	  '  install-nextflow  Run the included Nextflow installer.'
 
 lint:
@@ -21,6 +23,12 @@ lint:
 
 test:
 	@./tests/run_all.sh
+
+example-fresh:
+	@./examples/run_minimal_fresh.sh
+
+example-ffpe:
+	@./examples/run_minimal_ffpe.sh
 
 install-nextflow:
 	@./install_nextflow.sh

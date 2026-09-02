@@ -16,6 +16,8 @@
 - Added CI plus synthetic tests for launcher behavior, sample resolution,
   material-mode separation, package rules, VCF normalization, and both Nextflow
   parsers. An optional smoke test exercises a real fresh run with BQSR.
+- Added a committed artificial BAM/reference/known-sites fixture and one-command
+  minimal fresh and empty-variant FFPE smoke examples.
 
 The FFPErase integration remains subject to its upstream terms. See
 [THIRD_PARTY.md](THIRD_PARTY.md).

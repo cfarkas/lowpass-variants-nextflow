@@ -6,28 +6,39 @@ A portable workflow for reproducible low-pass SNV/indel calling from fresh or FF
 
 ## Getting Started
 
-Clone the repository, enter it, and run one small fresh-material BAM. This quickstart deliberately omits `-work-dir` and `-resume`; Nextflow will use `./work` in the launch directory.
+Clone the repository and run the bundled synthetic fresh example:
 
 ~~~bash
 git clone https://github.com/cfarkas/lowpass-variants-nextflow.git
 cd lowpass-variants-nextflow
 
-./bin/run_pipeline.sh \
-  -profile conda \
-  --fresh \
-  --input /data/example/SAMPLE_01.bam \
-  --outdir ./quickstart-results \
-  --ref /refs/reference.fa \
-  --known_sites /refs/dbsnp.vcf.gz,/refs/known_indels.vcf.gz
+bash examples/run_minimal_fresh.sh
 ~~~
 
-The reference and known-sites VCFs must describe the same assembly. Known-sites VCFs must have adjacent indexes. The main quickstart result is:
+The repository includes the artificial BAM, BAM index, 200-base reference,
+reference sidecars, known-sites VCF, and VCF index under `examples/tiny/`.
+The first run may take longer while Nextflow creates the supplied Conda
+environment. Its main result is:
 
 ~~~text
-quickstart-results/final_vcf/SAMPLE_01.final_variants.vcf.gz
+example-results/minimal-fresh/final_vcf/SAMPLE.final_variants.vcf.gz
 ~~~
 
-For a deliberately uncalibrated smoke run, replace `--known_sites ...` with `--skip_bqsr`. BQSR is recommended for normal runs.
+Run the bundled FFPE branch check with:
+
+~~~bash
+bash examples/run_minimal_ffpe.sh
+~~~
+
+The synthetic examples run real BQSR but deliberately skip all callers, so
+their final VCFs are header-only. They verify installation and workflow wiring,
+not biological calling accuracy. The FFPE example reaches FFPE orchestration,
+Picard metrics, empty-variant status handling, and annotation without performing
+non-empty model inference. A host Apptainer, Singularity, or Docker executable
+is still required. See [examples/tiny/README.md](examples/tiny/README.md).
+
+Neither smoke command needs `-work-dir` or `-resume`; Nextflow uses `./work` in
+the launch directory. Use the real-data commands below for an analysis.
 
 ## Table of Contents
 
@@ -38,6 +49,7 @@ For a deliberately uncalibrated smoke run, replace `--known_sites ...` with `--s
   - [General usage](#general-usage)
   - [Mandatory parameters](#mandatory-parameters)
   - [Material modes](#material-modes)
+  - [Minimal real-data runs](#minimal-real-data-runs)
   - [Complete run examples](#complete-run-examples)
   - [Main outputs](#main-outputs)
   - [Getting help](#getting-help)
@@ -163,6 +175,41 @@ Both modes use bcftools norm against --ref to split multiallelic records and lef
 
 Normalization or indexing failure is treated as a workflow failure; an unnormalized VCF is not substituted as a successful result. Every normalized compressed VCF must support a .tbi index. References or coordinates outside TBI limits are currently unsupported.
 
+### Minimal real-data runs
+
+These commands contain only the required pipeline inputs plus the recommended
+Conda profile. `--samples`, `-work-dir`, `-resume`, Mutect2 resources, and
+resource-tuning flags are optional.
+
+#### Minimal fresh analysis
+
+~~~bash
+./bin/run_pipeline.sh \
+  -profile conda \
+  --fresh \
+  --input /data/SAMPLE_01.bam \
+  --outdir /data/results/fresh \
+  --ref /refs/reference.fa \
+  --known_sites /refs/dbsnp.vcf.gz,/refs/known_indels.vcf.gz
+~~~
+
+#### Minimal FFPE analysis
+
+~~~bash
+./bin/run_pipeline.sh \
+  -profile conda \
+  --ffpe \
+  --input /data/SAMPLE_01.bam \
+  --outdir /data/results/ffpe \
+  --ref /refs/reference.fa \
+  --known_sites /refs/dbsnp.vcf.gz,/refs/known_indels.vcf.gz
+~~~
+
+For either mode, replace `--known_sites ...` with `--skip_bqsr` only when BQSR
+is deliberately inappropriate. A non-empty FFPE analysis may download the
+pinned upstream workflow, container image, and models unless the same task is
+resumed from populated caches.
+
 ### Complete run examples
 
 The first two examples show resumable production commands. `-work-dir` and
@@ -241,7 +288,7 @@ heuristics, jobs, or output fields are used.
 Replace the example container with a local file or immutable URI available on
 the execution host. The upstream revision shown is the package default.
 
-#### Minimal run that deliberately skips BQSR
+#### Fresh run that deliberately skips BQSR
 
 ~~~bash
 ./bin/run_pipeline.sh \
@@ -327,11 +374,6 @@ Operational answers, including recovery after an interrupted download, are in
 
 ## Repository Guide
 
-The top level follows minimap2's compact project style where it is useful for a
-Nextflow workflow: the primary guide, frequently asked questions, release notes,
-and common developer commands are immediately visible. Language-specific
-minimap2 source directories are replaced by workflow-specific directories.
-
 | Path | Purpose |
 |---|---|
 | `README.md` | Installation, quickstart, complete usage, outputs, and limits. |
@@ -341,7 +383,7 @@ minimap2 source directories are replaced by workflow-specific directories.
 | `main.nf`, `nextflow.config` | Workflow graph, defaults, profiles, and reports. |
 | `bin/` | Launcher, input resolver, finalization, and FFPErase helpers. |
 | `envs/`, `environment.yml` | Reproducible Conda environments. |
-| `examples/` | Fresh and FFPE production templates and parameter examples. |
+| `examples/` | Ready-to-run synthetic smoke data plus production templates. |
 | `assets/` | Short/full CLI help and packaged static inputs. |
 | `tests/` | Launcher, unit, parser, normalization, and workflow smoke tests. |
 | `FILES.txt` | Auditable package manifest. |
@@ -355,12 +397,23 @@ Run the static, unit, left-alignment, launcher, and real parser checks with:
 bash tests/run_all.sh
 ~~~
 
+The normal suite validates the committed synthetic BAM/reference/resources and
+checks that both minimal launchers forward the correct mode and inputs.
+
 An opt-in synthetic run also exercises real GATK BQSR and the complete fresh
 workflow with callers skipped. If the tools are in a separate environment,
 set `LOWPASS_TEST_TOOL_ENV` to that environment prefix:
 
 ~~~bash
 RUN_FRESH_PIPELINE_SMOKE=true \
+LOWPASS_TEST_TOOL_ENV=/path/to/tool-environment \
+bash tests/run_all.sh
+~~~
+
+The bundled FFPE empty-variant path has a separate opt-in end-to-end check:
+
+~~~bash
+RUN_FFPE_PIPELINE_SMOKE=true \
 LOWPASS_TEST_TOOL_ENV=/path/to/tool-environment \
 bash tests/run_all.sh
 ~~~
@@ -378,6 +431,9 @@ The same normal suite runs in GitHub Actions on every push and pull request.
 - FFPErase is an external workflow with its own container, models, network/cache
   requirements, and upstream terms. Its availability is independent of the
   common fresh-material path.
+- The bundled FFPE example has no variants and therefore does not test model
+  classification. Validate at least one representative non-empty FFPE sample
+  before production use.
 - Low-pass data can have limited sensitivity and unstable allele fractions.
   Validate thresholds and calls for the intended assay; this workflow is not a
   substitute for clinical validation.

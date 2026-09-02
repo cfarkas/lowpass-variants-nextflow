@@ -75,17 +75,35 @@ NORMALIZATION
   against --ref. Normalization/indexing errors fail the workflow. Every
   normalized compressed VCF requires a .tbi; TBI-incompatible data fail.
 
-MINIMAL QUICK EXAMPLE: FRESH WITH BQSR
+MINIMAL REAL-DATA EXAMPLES: BQSR
+  Fresh:
   ./bin/run_pipeline.sh \
     -profile conda \
     --fresh \
-    --input /path/to/bams \
+    --input /path/to/SAMPLE.bam \
     --outdir /path/to/fresh-results \
+    --ref /path/to/reference.fa \
+    --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
+
+  FFPE:
+  ./bin/run_pipeline.sh \
+    -profile conda \
+    --ffpe \
+    --input /path/to/SAMPLE.bam \
+    --outdir /path/to/ffpe-results \
     --ref /path/to/reference.fa \
     --known_sites /path/to/dbsnp.vcf.gz,/path/to/known_indels.vcf.gz
 
   --samples is optional. Without it, all BAMs resolved from --input are used.
   For a deliberate no-BQSR run, replace --known_sites with --skip_bqsr.
+
+BUNDLED SYNTHETIC SMOKE EXAMPLES
+  bash examples/run_minimal_fresh.sh
+  bash examples/run_minimal_ffpe.sh
+
+  Inputs and indexes are included under examples/tiny/. Both smoke examples
+  run BQSR but skip all callers. The FFPE smoke checks empty-variant handling,
+  not non-empty model classification.
 
 MAIN OUTPUTS
   <outdir>/final_vcf/<sample>.final_variants.vcf.gz
